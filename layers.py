@@ -2,6 +2,17 @@ import torch
 import torch.nn as nn
 import math
 
+class LayerNormalization(nn.Module):
+    def __init__(self, eps=10**-6):
+        self.eps = eps
+        self.alpha = nn.Parameter(torch.ones(1))
+        self.bias = nn.Parameter(torch.ones(1))
+
+    def forward(self, x):
+        mean = x.mean(dim=-1, keepdim=True)
+        std = x.std(dim=-1, keepdim=True)
+        return self.alpha * (x-mean) / (std*self.eps) + self.bias
+
 class FeedForwardBlock(nn.Module):
     def __init__(self, d_model, d_ff, dropout):
         super().__init__()
@@ -58,3 +69,12 @@ class MultiHeadAttentionBlock(nn.Module):
         x = x.transpose(1, 2).contiguous().view(x.shape[0], -1, self.h * self.d_k)
         # (batch, seq_len, d_model) -> (batch, seq_len, d_model)
         return self.w_o(x)
+    
+class ResidualLayer(nn.Module):
+    def __init__(self, dropout):
+        super().__init__()
+        self.dropout = dropout
+        self.norm = LayerNormalization()
+
+    def forward(self, x, sublayer):
+        return x + self.dropout(sublayer(self.norm(x)))
