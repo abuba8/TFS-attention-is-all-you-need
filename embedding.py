@@ -15,7 +15,7 @@ class InputEmbeddings(nn.Module):
     
 
 
-class PositionEmbedding(nn.Module):
+class PositionalEmbedding(nn.Module):
     def __init__(self, d_model, seq_len, dropout):
         super().__init__()
         self.d_model = d_model
